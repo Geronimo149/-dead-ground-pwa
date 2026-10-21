@@ -310,15 +310,17 @@ if (data.session) {
 };
 
 
+
 document.getElementById("cloudLogout").onclick = async () => {
   try {
     const { error } = await cloud.auth.signOut();
     if (error) throw error;
-    cloudStatus.textContent = "ออกจากระบบแล้ว";
   } catch (e) {
-    cloudStatus.textContent = "ออกจากระบบไม่สำเร็จ: " + e.message;
+    cloudStatus.textContent =
+      "ออกจากระบบไม่สำเร็จ: " + e.message;
   }
 };
+
 
 document.getElementById("cloudUpload").onclick = async () => {
   try {
@@ -383,17 +385,25 @@ document.getElementById("cloudDownload").onclick = async () => {
 };
 
 
-cloud.auth.onAuthStateChange((event, session) => {
+
+function updateCloudAuthUI(session) {
   const authForm = document.getElementById("cloudAuthForm");
+  const cloudStatus = document.getElementById("cloudStatus");
 
   if (session?.user) {
-    cloudStatus.textContent = "เชื่อมต่อแล้ว: " + session.user.email;
     if (authForm) authForm.style.display = "none";
+    cloudStatus.textContent =
+      "เข้าสู่ระบบแล้ว: " + (session.user.email || "");
   } else {
-    cloudStatus.textContent = "ยังไม่ได้เข้าสู่ระบบ";
     if (authForm) authForm.style.display = "";
+    cloudStatus.textContent = "ยังไม่ได้เข้าสู่ระบบ";
   }
+}
+
+cloud.auth.onAuthStateChange((event, session) => {
+  updateCloudAuthUI(session);
 });
+
 
 </script>
 </body>

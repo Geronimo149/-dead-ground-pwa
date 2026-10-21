@@ -39,7 +39,9 @@ footer{padding:20px;color:#93a2ad;text-align:center;font-size:.8rem}
   <div class="sub">ศูนย์บัญชาการ · ระบบข้อมูลและเซฟเกม</div>  
 <div class="card" style="margin-top:12px">
   <h2>Cloud Sync — ซิงก์เซฟเกม</h2>
-  <div id="cloudAuthForm"><label>อีเมล</label>
+  
+<div id="cloudAuthForm">
+<label>อีเมล</label>
   <input id="cloudEmail" type="email" placeholder="อีเมลของคุณ">
   <label>รหัสผ่าน</label>
   <input id="cloudPassword" type="password" placeholder="รหัสผ่าน">
@@ -289,10 +291,19 @@ document.getElementById("cloudLogin").onclick = async () => {
 
     if (error) throw error;
 
-    if (data.session) {
-      document.getElementById("cloudAuthForm").style.display = "none";
-      cloudStatus.textContent = "เข้าสู่ระบบแล้ว";
-    }
+    
+if (data.session) {
+  const authForm = document.getElementById("cloudAuthForm");
+
+  if (authForm) {
+    authForm.style.display = "none";
+  }
+
+  cloudStatus.textContent = "เข้าสู่ระบบแล้ว";
+} else {
+  cloudStatus.textContent = "เข้าสู่ระบบไม่สำเร็จ: ไม่พบ Session";
+}
+
   } catch (e) {
     cloudStatus.textContent = "เข้าสู่ระบบไม่สำเร็จ: " + e.message;
   }

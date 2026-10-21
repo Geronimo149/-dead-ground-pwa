@@ -1,0 +1,13 @@
+{
+  "id": "./",
+  "name": "DEAD GROUND — ศูนย์บัญชาการ",
+  "short_name": "DEAD GROUND",
+  "description": "ระบบจัดการข้อมูลและเซฟเกมเอาชีวิตรอด",
+  "lang": "th-TH",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#11161b",
+  "theme_color": "#11161b",
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#11161b">
+<meta name="description" content="DEAD GROUND — ระบบจัดการข้อมูลและเซฟเกมเอาชีวิตรอด">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>DEAD GROUND — ศูนย์บัญชาการ</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Noto Sans Thai",sans-serif;color:#e9edf1;background:#11161b}
+*{box-sizing:border-box} body{margin:0} header{padding:18px 16px;background:#1b242c;border-bottom:1px solid #34414b;position:sticky;top:0;z-index:5}
+h1{font-size:1.25rem;margin:0 0 4px} .sub{font-size:.85rem;color:#aebbc5}
+main{max-width:1050px;margin:auto;padding:14px;display:grid;gap:14px}
+nav{display:flex;gap:8px;overflow:auto;padding:2px 0}
+button,.btn{border:1px solid #46545f;border-radius:10px;padding:10px 13px;background:#25313a;color:#f1f5f7;font:inherit;cursor:pointer}
+button.active{background:#d2e1e8;color:#152028;border-color:#d2e1e8;font-weight:700}
+button.primary{background:#b7d7c5;color:#102018;border-color:#b7d7c5;font-weight:700}
+button.danger{background:#46292b;border-color:#784447}
+.panel{display:none}.panel.active{display:block}
+.card{background:#1a2229;border:1px solid #34414b;border-radius:14px;padding:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+h2{font-size:1.05rem;margin:0 0 12px} h3{font-size:.95rem;margin:0 0 8px}
+label{display:block;font-size:.85rem;color:#bdc8d0;margin:10px 0 5px}
+input,textarea,select{width:100%;background:#0f151a;color:#f0f3f5;border:1px solid #42505a;border-radius:8px;padding:10px;font:inherit}
+textarea{min-height:100px;resize:vertical} .stat{font-size:1.4rem;font-weight:750}.muted{color:#aebbc5;font-size:.88rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row>*{flex:1}.row button{flex:0 0 auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}td,th{text-align:left;border-bottom:1px solid #34414b;padding:8px 5px;vertical-align:top}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#0e1418;padding:12px;border-radius:8px;font-size:.82rem}
+.notice{border-left:3px solid #d2b16d;padding:8px 10px;background:#29251c;border-radius:6px;color:#f0dfb8;font-size:.88rem}
+footer{padding:20px;color:#93a2ad;text-align:center;font-size:.8rem}
+@media(min-width:750px){main{padding:20px}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧟 DEAD GROUND</h1>
+  <div class="sub">ศูนย์บัญชาการ · ระบบข้อมูลและเซฟเกม</div>
+  <div class="row" style="margin-top:10px"><span class="muted" id="connectionStatus">กำลังตรวจสอบสถานะ…</span><button id="installBtn" hidden>ติดตั้งแอป</button></div>
+</header>
+<main>
+  <div class="notice">ข้อมูลบันทึกในเบราว์เซอร์ของอุปกรณ์นี้โดยอัตโนมัติ ใช้ได้ออฟไลน์หลังเปิดแอปผ่าน HTTPS อย่างน้อยหนึ่งครั้ง สำรองไฟล์ JSON เป็นประจำ และนำเข้าไฟล์เซฟเมื่อต้องย้ายอุปกรณ์ ข้อมูลยังไม่ซิงก์ข้ามเครื่องอัตโนมัติ</div>
+  <nav>
+    <button class="tab active" data-tab="overview">ภาพรวม</button>
+    <button class="tab" data-tab="people">ค่ายและ NPC</button>
+    <button class="tab" data-tab="inventory">ทรัพยากร</button>
+    <button class="tab" data-tab="intel">ข่าวกรอง</button>
+    <button class="tab" data-tab="events">บันทึกเหตุการณ์</button>
+    <button class="tab" data-tab="gm">ส่งข้อมูลให้ GM</button>
+    <button class="tab" data-tab="backup">เซฟ/โหลด</button>
+  </nav>
+
+  <section id="overview" class="panel active">
+    <div class="grid">
+      <div class="card"><div class="muted">วันในเกม</div><div class="stat" id="dayView">28 ตุลาคม</div><label>วัน/วันที่ในเกม</label><input id="day" value="28 ตุลาคม"></div>
+      <div class="card"><div class="muted">เวลาในเกม</div><div class="stat" id="timeView">19:50</div><label>เวลา</label><input id="time" value="19:50"></div>
+      <div class="card"><div class="muted">สถานที่</div><div class="stat" style="font-size:1rem" id="placeView">ค่าย Lake Como</div><label>สถานที่ปัจจุบัน</label><input id="place" value="ห้องประชุมหลัก ค่ายริม Lake Como, Montana"></div>
+      <div class="card"><div class="muted">สถานะเซฟ</div><div class="stat" style="font-size:1rem" id="saveView">ยังไม่เคยส่งออก</div><p class="muted">ระบบเซฟในเบราว์เซอร์จะบันทึกอัตโนมัติเมื่อแก้ไขช่องข้อมูล</p></div>
+    </div>
+    <div class="card" style="margin-top:12px"><h2>สถานการณ์ล่าสุด</h2><textarea id="situation">ภูมิไม่เห็นตัวประกันด้วยตนเอง โกดังของ Red ปิดทึบและมีขนาดใหญ่ ตำแหน่งตัวประกันยังไม่ทราบ Caleb จำได้ว่ามีประตูด้านข้างอีกบาน แต่สภาพปัจจุบันยังไม่ยืนยัน</textarea><div class="row"><button class="primary" id="saveFields">บันทึกสถานะ</button><button id="quickExport">ดาวน์โหลดเซฟ JSON</button></div></div>
+    <div class="card" style="margin-top:12px"><h2>แผนถัดไป</h2><textarea id="nextPlan">29 ตุลาคม: ภูมิออกสำรวจป่า/เส้นทางใกล้ค่ายด้วย Stark VARG EX และพก AR-15 เพื่อป้องกันตัว กลับก่อน 17:00 น. ติดต่อ Daniel ทุก 2 ชั่วโมงหากมีสัญญาณ หลังกลับมาสอนพลเรือนป้องกันตัว แผนฝึกทีมภายในค่ายอยู่ภายใต้ Daniel; Mark Reynolds และ Brian Cooper เป็นฝ่ายรักษาความปลอดภัย ไม่ใช่ทีมสำรวจ</textarea><p class="muted">แผนยังไม่ถือว่าเกิดขึ้นจนกว่าจะเล่นและยืนยันในเนื้อเรื่อง</p></div>
+  </section>
+
+  <section id="people" class="panel">
+    <div class="card"><h2>สมาชิกค่าย / NPC</h2><p class="muted">เพิ่มเฉพาะบุคคลที่ยืนยันแล้ว อย่าเดาหน้าที่หรือสถานะที่ไม่ทราบ</p>
+      <div class="row"><input id="personName" placeholder="ชื่อบุคคล"><input id="personRole" placeholder="หน้าที่ / ความสัมพันธ์"></div>
+      <label>ข้อมูลยืนยัน / หมายเหตุ</label><textarea id="personNote" placeholder="ใส่เฉพาะข้อมูลที่ยืนยันแล้ว"></textarea>
+      <button class="primary" id="addPerson">เพิ่มบุคคล</button>
+      <div id="peopleList"></div>
+    </div>
+  </section>
+
+  <section id="inventory" class="panel">
+    <div class="card"><h2>ทรัพยากร / ยานพาหนะ / อุปกรณ์</h2><p class="muted">จำนวนที่กรอกคือข้อมูลในฐานข้อมูลเท่านั้น ตรวจสอบก่อนใช้เป็นตัวเลขในเกมจริง</p>
+      <div class="row"><input id="itemName" placeholder="ชื่อรายการ"><input id="itemQty" placeholder="จำนวน (หรือไม่ทราบ)"></div>
+      <label>หมายเหตุ</label><input id="itemNote" placeholder="สภาพ, ตำแหน่งเก็บ, เจ้าของ ฯลฯ">
+      <button class="primary" id="addItem">เพิ่มรายการ</button>
+      <div id="itemsList"></div>
+    </div>
+  </section>
+
+  <section id="intel" class="panel">
+    <div class="card"><h2>ข่าวกรองและเบาะแส</h2>
+      <label>หัวข้อ</label><input id="intelTitle" placeholder="เช่น Red — ประตูด้านข้างโกดัง">
+      <label>รายละเอียด</label><textarea id="intelBody" placeholder="บันทึกข้อมูล"></textarea>
+      <label>ประเภทข้อมูล</label><select id="intelType"><option>ยืนยันแล้วจากการสังเกต</option><option>คำบอกเล่า</option><option>ข้อสันนิษฐาน</option><option>ไม่ทราบ / ต้องตรวจสอบ</option></select>
+      <button class="primary" id="addIntel">เพิ่มข่าวกรอง</button>
+      <div id="intelList"></div>
+    </div>
+  </section>
+
+  <section id="events" class="panel">
+    <div class="card"><h2>บันทึกเหตุการณ์</h2><label>เหตุการณ์ใหม่</label><textarea id="eventText" placeholder="บันทึกเฉพาะสิ่งที่เกิดขึ้นจริง"></textarea>
+      <div class="row"><input id="eventWhen" placeholder="วัน/เวลา เช่น 28 ต.ค. 19:50"><select id="eventKind"><option>เกิดขึ้นแล้ว</option><option>แผนที่ตกลงแล้ว แต่ยังไม่เกิด</option><option>คำบอกเล่า</option><option>ข้อสันนิษฐาน</option></select></div>
+      <button class="primary" id="addEvent">เพิ่มเหตุการณ์</button><div id="eventsList"></div>
+    </div>
+  </section>
+
+  <section id="gm" class="panel">
+    <div class="card"><h2>ชุดข้อมูลสำหรับ ChatGPT GM</h2>
+      <p class="muted">สร้างข้อความจากฐานข้อมูลปัจจุบัน เพื่อนำไปวางในแชท ChatGPT ใช้ได้โดยไม่ต้องแนบไฟล์ทุกครั้ง แต่ควรแนบไฟล์เซฟเต็มเมื่อเปลี่ยนแชท</p>
+      <button class="primary" id="makePrompt">สร้างข้อความสำหรับ GM</button>
+      <label>ข้อความพร้อมคัดลอก</label><textarea id="gmPrompt" style="min-height:260px"></textarea>
+      <div class="row"><button id="copyPrompt">คัดลอกข้อความ</button><button id="downloadPrompt">ดาวน์โหลดข้อความ .txt</button></div>
+      <label>บันทึกการเปลี่ยนแปลงจาก GM / ผลที่เกิดขึ้นในเกม</label><textarea id="changeText" placeholder="วางผลลัพธ์ที่เกิดขึ้นจริงจาก GM เช่น ใช้กระสุนไป 3 นัด, เพิ่มของที่พบ, สมาชิกบาดเจ็บ"></textarea>
+      <button class="primary" id="appendChange">เพิ่มลงบันทึกเหตุการณ์</button>
+    </div>
+  </section>
+
+  <section id="backup" class="panel">
+    <div class="card"><h2>สำรอง / โหลดเซฟ</h2>
+      <p>ส่งออกไฟล์ JSON เพื่อเก็บใน Google Drive หรือย้ายข้อมูลไปอีกอุปกรณ์</p>
+      <div class="row"><button class="primary" id="exportBtn">ดาวน์โหลดไฟล์เซฟ</button><button id="importBtn">นำเข้าไฟล์เซฟ</button><input id="importFile" type="file" accept=".json,application/json" hidden></div>
+      <p class="muted">การนำเข้าไฟล์จะเขียนทับข้อมูลที่อยู่ในหน้าเว็บนี้ ควรส่งออกสำรองก่อน</p>
+      <button class="danger" id="resetBtn">ล้างข้อมูลในเบราว์เซอร์นี้</button>
+      <label>ตัวอย่างข้อมูลเซฟปัจจุบัน</label><pre id="jsonPreview"></pre>
+    </div>
+  </section>
+</main>
+<footer>DEAD GROUND · PWA v0.2 · เก็บข้อมูลในเครื่อง ไม่ส่งข้อมูลไปเซิร์ฟเวอร์</footer>
+<script>
+const KEY="dead-ground-prototype-v1";
+const initial={
+ version:1, day:"28 ตุลาคม", time:"19:50", place:"ห้องประชุมหลัก ค่ายริม Lake Como, Montana",
+ situation:"ภูมิไม่เห็นตัวประกันด้วยตนเอง โกดังของ Red ปิดทึบและมีขนาดใหญ่ ตำแหน่งตัวประกันยังไม่ทราบ Caleb จำได้ว่ามีประตูด้านข้างอีกบาน แต่สภาพปัจจุบันยังไม่ยืนยัน",
+ nextPlan:"29 ตุลาคม: ภูมิออกสำรวจป่า/เส้นทางใกล้ค่ายด้วย Stark VARG EX และพก AR-15 เพื่อป้องกันตัว กลับก่อน 17:00 น. ติดต่อ Daniel ทุก 2 ชั่วโมงหากมีสัญญาณ หลังกลับมาสอนพลเรือนป้องกันตัว แผนฝึกทีมภายในค่ายอยู่ภายใต้ Daniel; Mark Reynolds และ Brian Cooper เป็นฝ่ายรักษาความปลอดภัย ไม่ใช่ทีมสำรวจ",
+ people:[
+ {name:"Daniel",role:"ผู้ช่วยที่ไว้ใจได้; ดูแลการฝึกและการเฝ้าระวัง",note:"จะดูแลการฝึกภายในค่ายวันที่ 29 ต.ค. ตามแผน"},
+ {name:"Caleb",role:"อดีตสมาชิก Red / แหล่งข้อมูล",note:"ยืนยันว่าเคยมีสมาชิก Red ก่อเหตุล่วงละเมิดทางเพศ; จำได้ว่ามีประตูด้านข้างของโกดัง"},
+ {name:"Nathaniel",role:"ผู้ร่วมสนทนาเกี่ยวกับ Red",note:"ข้อมูลภายในที่ยืนยันยังจำกัด"},
+ {name:"Mark Reynolds",role:"รักษาความปลอดภัยค่าย",note:"ไม่ใช่สมาชิกทีมสำรวจ; สามารถฝึกร่วมกับทีมได้"},
+ {name:"Brian Cooper",role:"รักษาความปลอดภัยค่าย",note:"ไม่ใช่สมาชิกทีมสำรวจ; สามารถฝึกร่วมกับทีมได้"}
+ ],
+ items:[
+ {name:"UTV",qty:"3",note:"นำกลับค่าย; สภาพรายคันไม่ทราบ"},
+ {name:"ATV",qty:"4",note:"นำกลับค่าย; สภาพรายคันไม่ทราบ"},
+ {name:"รถวิบากใช้น้ำมัน",qty:"4",note:"นำกลับค่าย"},
+ {name:"Stark VARG EX",qty:"1",note:"มอเตอร์ไซค์วิบากไฟฟ้าของภูมิ พร้อมแบตเตอรี่สำรองและเครื่องชาร์จ"},
+ {name:"จักรยาน",qty:"20",note:"นำกลับมาให้คนในค่าย"},
+ {name:"หมวกจักรยาน",qty:"24",note:"นำกลับค่าย"},
+ {name:"รถพ่วงจักรยาน",qty:"2",note:"นำกลับค่าย"},
+ {name:"เครื่องปั่นไฟ",qty:"8",note:"เชื้อเพลิง/สภาพไม่ทราบ"},
+ {name:"รถแทรกเตอร์",qty:"2",note:"นำกลับค่าย"},
+ {name:"อุปกรณ์เตรียม/ปรับหน้าดิน",qty:"3",note:"นำกลับค่าย"},
+ {name:"รถพ่วง",qty:"5",note:"นำกลับค่าย"},
+ {name:"เครื่องตัดหญ้า",qty:"3",note:"นำกลับค่าย"},
+ {name:"สโนว์โมบิล",qty:"6",note:"นำกลับค่าย"},
+ {name:"เครื่องมือและอะไหล่",qty:"ไม่ทราบ",note:"มีนำกลับมา แต่ไม่มีรายการรายชิ้น"}
+ ],
+ intel:[
+ {title:"จำนวนและอาวุธ Red",body:"จากการสังเกตของภูมิ: จำนวนไม่แน่ชัดแต่ประเมินว่าไม่ถึง 30 คน; บางคนมี AR-15, บางคนมีปืนลูกซอง, บางคนมีไม้เบสบอลและมีดพร้า",type:"ยืนยันแล้วจากการสังเกต"},
+ {title:"การป้องกัน Red",body:"ไม่เห็นเกราะกันกระสุน หมวกกันกระสุน หรืออุปกรณ์มองกลางคืน; มีเวรยามและกองไฟหลายจุด; พบขวดแอลกอฮอล์/เบียร์",type:"ยืนยันแล้วจากการสังเกต"},
+ {title:"การล่วงละเมิดทางเพศ",body:"Caleb ยืนยันว่ามีสมาชิก Red บางคนเคยล่วงละเมิดทางเพศ/ข่มขืนผู้หญิงที่อยู่ภายใต้การควบคุม; จำนวนและรายละเอียดไม่ทราบ",type:"คำบอกเล่า"},
+ {title:"ประตูด้านข้างโกดัง",body:"Caleb จำได้ว่าโกดังมีประตูด้านข้างอีกบานนอกเหนือจากประตูใหญ่ด้านหน้า; สภาพปัจจุบันยังไม่ยืนยัน",type:"คำบอกเล่า"}
+ ],
+ events:[
+ {when:"28 ต.ค. 19:00",kind:"เกิดขึ้นแล้ว",text:"ทุกคนรับประทานอาหารเย็นร่วมกันในค่าย"},
+ {when:"28 ต.ค. 19:30",kind:"เกิดขึ้นแล้ว",text:"ประชุมกับ Daniel, Caleb และ Nathaniel เกี่ยวกับ Red"},
+ {when:"28 ต.ค. 19:50",kind:"เกิดขึ้นแล้ว",text:"ภูมิยืนยันว่าไม่เห็นตัวประกันด้วยตนเอง และไม่ทราบตำแหน่งในโกดัง"},
+ {when:"29 ต.ค.",kind:"แผนที่ตกลงแล้ว แต่ยังไม่เกิด",text:"ภูมิออกสำรวจใกล้ค่ายด้วย Stark VARG EX กลับก่อน 17:00; Daniel ดูแลการฝึกทีมในค่าย"}
+ ]
+};
+let data;
+try{data=JSON.parse(localStorage.getItem(KEY))||initial}catch(e){data=initial}
+function persist(){localStorage.setItem(KEY,JSON.stringify(data));render();document.getElementById("saveView").textContent="บันทึกในเครื่องแล้ว"}
+function bindFields(){["day","time","place","situation","nextPlan"].forEach(k=>{document.getElementById(k).value=data[k]||"";document.getElementById(k).addEventListener("change",()=>{data[k]=document.getElementById(k).value;persist()})})}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function render(){
+ document.getElementById("dayView").textContent=data.day;document.getElementById("timeView").textContent=data.time;document.getElementById("placeView").textContent=data.place;
+ document.getElementById("jsonPreview").textContent=JSON.stringify(data,null,2);
+ document.getElementById("peopleList").innerHTML="<table><tr><th>ชื่อ</th><th>หน้าที่ / หมายเหตุ</th><th></th></tr>"+data.people.map((p,i)=>`<tr><td>${esc(p.name)}</td><td><b>${esc(p.role)}</b><br>${esc(p.note)}</td><td><button onclick="removeEntry('people',${i})">ลบ</button></td></tr>`).join("")+"</table>";
+ document.getElementById("itemsList").innerHTML="<table><tr><th>รายการ</th><th>จำนวน</th><th>หมายเหตุ</th><th></th></tr>"+data.items.map((p,i)=>`<tr><td>${esc(p.name)}</td><td>${esc(p.qty)}</td><td>${esc(p.note)}</td><td><button onclick="removeEntry('items',${i})">ลบ</button></td></tr>`).join("")+"</table>";
+ document.getElementById("intelList").innerHTML=data.intel.map((p,i)=>`<div class="card" style="margin-top:8px"><b>${esc(p.title)}</b><p>${esc(p.body)}</p><span class="muted">${esc(p.type)}</span><p><button onclick="removeEntry('intel',${i})">ลบรายการ</button></p></div>`).join("");
+ document.getElementById("eventsList").innerHTML=data.events.slice().reverse().map((p,i)=>`<div class="card" style="margin-top:8px"><b>${esc(p.when)} · ${esc(p.kind)}</b><p>${esc(p.text)}</p><button onclick="removeEventReverse(${i})">ลบรายการ</button></div>`).join("");
+}
+window.removeEntry=(key,i)=>{if(confirm("ลบรายการนี้ใช่ไหม?")){data[key].splice(i,1);persist()}};
+window.removeEventReverse=i=>{if(confirm("ลบเหตุการณ์นี้ใช่ไหม?")){data.events.splice(data.events.length-1-i,1);persist()}};
+function download(filename,content,type="application/json"){let blob=new Blob([content],{type});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".panel").forEach(x=>x.classList.toggle("active",x.id===b.dataset.tab));render()});
+document.getElementById("saveFields").onclick=()=>{["day","time","place","situation","nextPlan"].forEach(k=>data[k]=document.getElementById(k).value);persist();alert("บันทึกสถานะแล้ว")};
+document.getElementById("quickExport").onclick=()=>exportSave();
+document.getElementById("addPerson").onclick=()=>{let name=personName.value.trim();if(!name)return alert("ใส่ชื่อก่อน");data.people.push({name,role:personRole.value.trim(),note:personNote.value.trim()});personName.value=personRole.value=personNote.value="";persist()};
+document.getElementById("addItem").onclick=()=>{let name=itemName.value.trim();if(!name)return alert("ใส่ชื่อรายการก่อน");data.items.push({name,qty:itemQty.value.trim()||"ไม่ทราบ",note:itemNote.value.trim()});itemName.value=itemQty.value=itemNote.value="";persist()};
+document.getElementById("addIntel").onclick=()=>{let title=intelTitle.value.trim(),body=intelBody.value.trim();if(!title||!body)return alert("ใส่หัวข้อและรายละเอียดก่อน");data.intel.push({title,body,type:intelType.value});intelTitle.value=intelBody.value="";persist()};
+document.getElementById("addEvent").onclick=()=>{let text=eventText.value.trim();if(!text)return alert("ใส่เหตุการณ์ก่อน");data.events.push({when:eventWhen.value.trim()||`${data.day} ${data.time}`,kind:eventKind.value,text});eventText.value="";persist()};
+function buildPrompt(){["day","time","place","situation","nextPlan"].forEach(k=>data[k]=document.getElementById(k).value);persist();return `คุณคือ GM ของ DEAD GROUND ใช้ข้อมูลด้านล่างเป็นฐานอ้างอิง\nกฎ: ตอบภาษาไทย กระชับ เน้นผลการกระทำ ไม่ยืดบทสนทนา ห้ามแต่งข้อมูลที่ไม่มีหลักฐาน แยกข้อเท็จจริง/คำบอกเล่า/ข้อสันนิษฐาน แผนยังไม่ถือว่าเกิดขึ้นจนกว่าจะดำเนินการ หากข้อมูลขัดแย้งให้แจ้งก่อนแก้\n\nสถานะ: ${data.day}, ${data.time}\nสถานที่: ${data.place}\nสถานการณ์: ${data.situation}\nแผนถัดไป (ยังไม่เกิดขึ้นจนกว่าจะเล่น): ${data.nextPlan}\n\nสมาชิกค่าย:\n${data.people.map(p=>`- ${p.name}: ${p.role}. ${p.note}`).join("\n")}\n\nทรัพยากรและยานพาหนะ:\n${data.items.map(p=>`- ${p.name} x${p.qty}: ${p.note}`).join("\n")}\n\nข่าวกรอง:\n${data.intel.map(p=>`- [${p.type}] ${p.title}: ${p.body}`).join("\n")}\n\nเหตุการณ์ล่าสุด:\n${data.events.slice(-15).map(p=>`- ${p.when} [${p.kind}]: ${p.text}`).join("\n")}\n\nดำเนินเรื่องต่อจากสถานะนี้ โดยตอบตรงคำสั่งล่าสุดของผู้เล่น ไม่สรุปข้อมูลทั้งหมดซ้ำ` }
+document.getElementById("makePrompt").onclick=()=>{gmPrompt.value=buildPrompt()};
+document.getElementById("copyPrompt").onclick=async()=>{if(!gmPrompt.value)gmPrompt.value=buildPrompt();try{await navigator.clipboard.writeText(gmPrompt.value);alert("คัดลอกแล้ว")}catch(e){gmPrompt.select();document.execCommand("copy");alert("ลองคัดลอกข้อความที่เลือก")}};
+document.getElementById("downloadPrompt").onclick=()=>{if(!gmPrompt.value)gmPrompt.value=buildPrompt();download("DEAD_GROUND_GM_CONTEXT.txt",gmPrompt.value,"text/plain;charset=utf-8")};
+document.getElementById("appendChange").onclick=()=>{let text=changeText.value.trim();if(!text)return alert("วางข้อมูลการเปลี่ยนแปลงก่อน");data.events.push({when:`${data.day} ${data.time}`,kind:"เกิดขึ้นแล้ว (นำเข้าจากผล GM)",text});changeText.value="";persist();alert("เพิ่มลงบันทึกเหตุการณ์แล้ว")};
+function exportSave(){["day","time","place","situation","nextPlan"].forEach(k=>data[k]=document.getElementById(k).value);persist();download(`DEAD_GROUND_SAVE_${data.day.replace(/\s/g,"_")}.json`,JSON.stringify(data,null,2))}
+document.getElementById("exportBtn").onclick=exportSave;
+document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
+document.getElementById("importFile").onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let incoming=JSON.parse(await f.text());if(!incoming.version||!Array.isArray(incoming.people)||!Array.isArray(incoming.events))throw Error("รูปแบบไฟล์ไม่ถูกต้อง");if(!confirm("นำเข้าแล้วเขียนทับข้อมูลปัจจุบันในเบราว์เซอร์นี้ใช่ไหม?"))return;data=incoming;localStorage.setItem(KEY,JSON.stringify(data));bindFields();persist();alert("โหลดเซฟแล้ว")}catch(err){alert("โหลดไม่สำเร็จ: "+err.message)}e.target.value=""};
+document.getElementById("resetBtn").onclick=()=>{if(confirm("ล้างข้อมูลนี้จริงหรือไม่? แนะนำให้ส่งออกไฟล์สำรองก่อน")){localStorage.removeItem(KEY);data=JSON.parse(JSON.stringify(initial));bindFields();persist()}};
+bindFields();render();
+// PWA: service worker requires HTTPS or localhost; local file:// mode will not install/offline-cache.
+const connectionStatus=document.getElementById('connectionStatus');
+function updateConnection(){connectionStatus.textContent=(navigator.onLine?'ออนไลน์':'ออฟไลน์')+' · '+(('serviceWorker' in navigator)?'รองรับโหมดแอป':'เบราว์เซอร์นี้ไม่รองรับ Service Worker');}
+window.addEventListener('online',updateConnection);window.addEventListener('offline',updateConnection);updateConnection();
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').then(()=>{connectionStatus.textContent=(navigator.onLine?'ออนไลน์':'ออฟไลน์')+' · พร้อมใช้แอป';}).catch(()=>{connectionStatus.textContent='เปิดใช้งานได้ แต่ตั้งค่าโหมดออฟไลน์ไม่สำเร็จ';}));
+}
+let installPrompt=null;const installBtn=document.getElementById('installBtn');
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;installBtn.hidden=false;});
+installBtn.addEventListener('click',async()=>{if(!installPrompt){alert('หากไม่เห็นหน้าติดตั้ง ให้เปิดเมนูเบราว์เซอร์แล้วเลือก “ติดตั้งแอป” หรือ “เพิ่มไปยังหน้าจอหลัก”');return;}installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;installBtn.hidden=true;});
+window.addEventListener('appinstalled',()=>{installBtn.hidden=true;connectionStatus.textContent='ติดตั้งแอปแล้ว';});
+</script>
+</body></html>

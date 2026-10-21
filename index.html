@@ -36,7 +36,25 @@ footer{padding:20px;color:#93a2ad;text-align:center;font-size:.8rem}
 <body>
 <header>
   <h1>🧟 DEAD GROUND</h1>
-  <div class="sub">ศูนย์บัญชาการ · ระบบข้อมูลและเซฟเกม</div>
+  <div class="sub">ศูนย์บัญชาการ · ระบบข้อมูลและเซฟเกม</div>  
+<div class="card" style="margin-top:12px">
+  <h2>Cloud Sync — ซิงก์เซฟเกม</h2>
+  <label>อีเมล</label>
+  <input id="cloudEmail" type="email" placeholder="อีเมลของคุณ">
+  <label>รหัสผ่าน</label>
+  <input id="cloudPassword" type="password" placeholder="รหัสผ่าน">
+  <div class="row" style="margin-top:10px">
+    <button class="primary" id="cloudLogin">เข้าสู่ระบบ</button>
+    <button id="cloudRegister">สมัครบัญชี</button>
+    <button id="cloudLogout">ออกจากระบบ</button>
+  </div>
+  <p class="muted" id="cloudStatus">ยังไม่ได้เชื่อมต่อ Cloud</p>
+  <div class="row">
+    <button class="primary" id="cloudUpload">อัปโหลดเซฟขึ้น Cloud</button>
+    <button id="cloudDownload">โหลดเซฟจาก Cloud</button>
+  </div>
+</div>
+
   <div class="row" style="margin-top:10px"><span class="muted" id="connectionStatus">กำลังตรวจสอบสถานะ…</span><button id="installBtn" hidden>ติดตั้งแอป</button></div>
 </header>
 <main>
@@ -119,8 +137,11 @@ footer{padding:20px;color:#93a2ad;text-align:center;font-size:.8rem}
   </section>
 </main>
 <footer>DEAD GROUND · PWA v0.2 · เก็บข้อมูลในเครื่อง ไม่ส่งข้อมูลไปเซิร์ฟเวอร์</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const KEY="dead-ground-prototype-v1";
+
 const initial={
  version:1, day:"28 ตุลาคม", time:"19:50", place:"ห้องประชุมหลัก ค่ายริม Lake Como, Montana",
  situation:"ภูมิไม่เห็นตัวประกันด้วยตนเอง โกดังของ Red ปิดทึบและมีขนาดใหญ่ ตำแหน่งตัวประกันยังไม่ทราบ Caleb จำได้ว่ามีประตูด้านข้างอีกบาน แต่สภาพปัจจุบันยังไม่ยืนยัน",
@@ -206,5 +227,121 @@ let installPrompt=null;const installBtn=document.getElementById('installBtn');
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;installBtn.hidden=false;});
 installBtn.addEventListener('click',async()=>{if(!installPrompt){alert('หากไม่เห็นหน้าติดตั้ง ให้เปิดเมนูเบราว์เซอร์แล้วเลือก “ติดตั้งแอป” หรือ “เพิ่มไปยังหน้าจอหลัก”');return;}installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;installBtn.hidden=true;});
 window.addEventListener('appinstalled',()=>{installBtn.hidden=true;connectionStatus.textContent='ติดตั้งแอปแล้ว';});
+
+const cloudStatus = document.getElementById("cloudStatus");
+
+async function cloudUser() {
+  const { data, error } = await cloud.auth.getUser();
+  if (error) throw error;
+  if (!data.user) throw new Error("กรุณาเข้าสู่ระบบก่อน");
+  return data.user;
+}
+
+document.getElementById("cloudRegister").onclick = async () => {
+  try {
+    const email = document.getElementById("cloudEmail").value.trim();
+    const password = document.getElementById("cloudPassword").value;
+    const { error } = await cloud.auth.signUp({ email, password });
+    if (error) throw error;
+    cloudStatus.textContent =
+      "สมัครบัญชีแล้ว หากมีอีเมลยืนยัน ให้ยืนยันก่อนเข้าสู่ระบบ";
+  } catch (e) {
+    cloudStatus.textContent = "สมัครไม่สำเร็จ: " + e.message;
+  }
+};
+
+document.getElementById("cloudLogin").onclick = async () => {
+  try {
+    const email = document.getElementById("cloudEmail").value.trim();
+    const password = document.getElementById("cloudPassword").value;
+    const { error } = await cloud.auth.signInWithPassword({
+      email, password
+    });
+    if (error) throw error;
+    cloudStatus.textContent = "เข้าสู่ระบบแล้ว";
+  } catch (e) {
+    cloudStatus.textContent = "เข้าสู่ระบบไม่สำเร็จ: " + e.message;
+  }
+};
+
+document.getElementById("cloudLogout").onclick = async () => {
+  const { error } = await cloud.auth.signOut();
+  cloudStatus.textContent = error
+    ? "ออกจากระบบไม่สำเร็จ: " + error.message
+    : "ออกจากระบบแล้ว";
+};
+
+document.getElementById("cloudUpload").onclick = async () => {
+  try {
+    const user = await cloudUser();
+
+    ["day", "time", "place", "situation", "nextPlan"]
+      .forEach(k => data[k] = document.getElementById(k).value);
+
+    persist();
+
+    const { error } = await cloud.from("game_saves").upsert({
+      user_id: user.id,
+      save_name: "DEAD GROUND",
+      save_data: data,
+      updated_at: new Date().toISOString()
+    }, { onConflict: "user_id,save_name" });
+
+    if (error) throw error;
+    cloudStatus.textContent = "อัปโหลดเซฟสำเร็จ";
+  } catch (e) {
+    cloudStatus.textContent = "อัปโหลดไม่สำเร็จ: " + e.message;
+  }
+};
+
+document.getElementById("cloudDownload").onclick = async () => {
+  try {
+    const user = await cloudUser();
+
+    const { data: row, error } = await cloud
+      .from("game_saves")
+      .select("save_data,updated_at")
+      .eq("user_id", user.id)
+      .eq("save_name", "DEAD GROUND")
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!row) throw new Error("ยังไม่พบเซฟบน Cloud");
+
+    if (!confirm(
+      "โหลดเซฟจาก Cloud แล้วแทนที่ข้อมูลในเครื่องนี้ใช่ไหม? " +
+      "ควรดาวน์โหลดไฟล์ JSON สำรองก่อน"
+    )) return;
+
+    if (!row.save_data ||
+        !Array.isArray(row.save_data.people) ||
+        !Array.isArray(row.save_data.events) ||
+        !Array.isArray(row.save_data.items) ||
+        !Array.isArray(row.save_data.intel)) {
+      throw new Error("รูปแบบเซฟไม่ถูกต้อง");
+    }
+
+    data = row.save_data;
+    localStorage.setItem(KEY, JSON.stringify(data));
+    alert("โหลดเซฟจาก Cloud สำเร็จ");
+    location.reload();
+  } catch (e) {
+    cloudStatus.textContent = "โหลดไม่สำเร็จ: " + e.message;
+  }
+};
+
+cloud.auth.onAuthStateChange((event, session) => {
+  cloudStatus.textContent = session?.user
+    ? "เชื่อมต่อแล้ว: " + session.user.email
+    : "ยังไม่ได้เข้าสู่ระบบ";
+});
 </script>
 </body></html>
+
+const SUPABASE_URL = https://kzoioljzgbrqegvporfn.supabase.co;
+const SUPABASE_KEY = sb_publishable__Ui9ZhBgVZdrLeMlWUAxlg_pshNvS7d;
+
+const cloud = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);

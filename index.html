@@ -228,6 +228,15 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installProm
 installBtn.addEventListener('click',async()=>{if(!installPrompt){alert('หากไม่เห็นหน้าติดตั้ง ให้เปิดเมนูเบราว์เซอร์แล้วเลือก “ติดตั้งแอป” หรือ “เพิ่มไปยังหน้าจอหลัก”');return;}installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;installBtn.hidden=true;});
 window.addEventListener('appinstalled',()=>{installBtn.hidden=true;connectionStatus.textContent='ติดตั้งแอปแล้ว';});
 
+
+const SUPABASE_URL = https://kzoioljzgbrqegvporfn.supabase.co;
+const SUPABASE_KEY = sb_publishable__Ui9ZhBgVZdrLeMlWUAxlg_pshNvS7d;
+
+const cloud = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
 const cloudStatus = document.getElementById("cloudStatus");
 
 async function cloudUser() {
@@ -241,10 +250,13 @@ document.getElementById("cloudRegister").onclick = async () => {
   try {
     const email = document.getElementById("cloudEmail").value.trim();
     const password = document.getElementById("cloudPassword").value;
+    if (!email || !password) throw new Error("กรุณากรอกอีเมลและรหัสผ่าน");
+
     const { error } = await cloud.auth.signUp({ email, password });
     if (error) throw error;
+
     cloudStatus.textContent =
-      "สมัครบัญชีแล้ว หากมีอีเมลยืนยัน ให้ยืนยันก่อนเข้าสู่ระบบ";
+      "สมัครบัญชีแล้ว หากได้รับอีเมลยืนยัน กรุณายืนยันก่อนเข้าสู่ระบบ";
   } catch (e) {
     cloudStatus.textContent = "สมัครไม่สำเร็จ: " + e.message;
   }
@@ -254,6 +266,8 @@ document.getElementById("cloudLogin").onclick = async () => {
   try {
     const email = document.getElementById("cloudEmail").value.trim();
     const password = document.getElementById("cloudPassword").value;
+    if (!email || !password) throw new Error("กรุณากรอกอีเมลและรหัสผ่าน");
+
     const { error } = await cloud.auth.signInWithPassword({
       email, password
     });
@@ -265,10 +279,13 @@ document.getElementById("cloudLogin").onclick = async () => {
 };
 
 document.getElementById("cloudLogout").onclick = async () => {
-  const { error } = await cloud.auth.signOut();
-  cloudStatus.textContent = error
-    ? "ออกจากระบบไม่สำเร็จ: " + error.message
-    : "ออกจากระบบแล้ว";
+  try {
+    const { error } = await cloud.auth.signOut();
+    if (error) throw error;
+    cloudStatus.textContent = "ออกจากระบบแล้ว";
+  } catch (e) {
+    cloudStatus.textContent = "ออกจากระบบไม่สำเร็จ: " + e.message;
+  }
 };
 
 document.getElementById("cloudUpload").onclick = async () => {
@@ -313,15 +330,18 @@ document.getElementById("cloudDownload").onclick = async () => {
       "ควรดาวน์โหลดไฟล์ JSON สำรองก่อน"
     )) return;
 
-    if (!row.save_data ||
-        !Array.isArray(row.save_data.people) ||
-        !Array.isArray(row.save_data.events) ||
-        !Array.isArray(row.save_data.items) ||
-        !Array.isArray(row.save_data.intel)) {
+    const saved = row.save_data;
+    if (
+      !saved ||
+      !Array.isArray(saved.people) ||
+      !Array.isArray(saved.events) ||
+      !Array.isArray(saved.items) ||
+      !Array.isArray(saved.intel)
+    ) {
       throw new Error("รูปแบบเซฟไม่ถูกต้อง");
     }
 
-    data = row.save_data;
+    data = saved;
     localStorage.setItem(KEY, JSON.stringify(data));
     alert("โหลดเซฟจาก Cloud สำเร็จ");
     location.reload();
@@ -335,11 +355,6 @@ cloud.auth.onAuthStateChange((event, session) => {
     ? "เชื่อมต่อแล้ว: " + session.user.email
     : "ยังไม่ได้เข้าสู่ระบบ";
 });
-const SUPABASE_URL = https://kzoioljzgbrqegvporfn.supabase.co;
-const SUPABASE_KEY = sb_publishable__Ui9ZhBgVZdrLeMlWUAxlg_pshNvS7d;
-
-const cloud = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);</script>
-</body></html>
+</script>
+</body>
+</html>

@@ -371,11 +371,19 @@ document.getElementById("cloudDownload").onclick = async () => {
   }
 };
 
+
 cloud.auth.onAuthStateChange((event, session) => {
-  cloudStatus.textContent = session?.user
-    ? "เชื่อมต่อแล้ว: " + session.user.email
-    : "ยังไม่ได้เข้าสู่ระบบ";
+  const authForm = document.getElementById("cloudAuthForm");
+
+  if (session?.user) {
+    cloudStatus.textContent = "เชื่อมต่อแล้ว: " + session.user.email;
+    if (authForm) authForm.style.display = "none";
+  } else {
+    cloudStatus.textContent = "ยังไม่ได้เข้าสู่ระบบ";
+    if (authForm) authForm.style.display = "";
+  }
 });
+
 </script>
 </body>
 </html>

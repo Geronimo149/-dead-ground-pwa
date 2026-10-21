@@ -252,8 +252,17 @@ document.getElementById("cloudRegister").onclick = async () => {
     const password = document.getElementById("cloudPassword").value;
     if (!email || !password) throw new Error("กรุณากรอกอีเมลและรหัสผ่าน");
 
-    const { error } = await cloud.auth.signUp({ email, password });
-    if (error) throw error;
+    
+const { error } = await cloud.auth.signUp({
+  email,
+  password,
+  options: {
+    emailRedirectTo: "https://geronimo149.github.io/-dead-ground-pwa/"
+  }
+});
+
+if (error) throw error;
+
 
     cloudStatus.textContent =
       "สมัครบัญชีแล้ว หากได้รับอีเมลยืนยัน กรุณายืนยันก่อนเข้าสู่ระบบ";

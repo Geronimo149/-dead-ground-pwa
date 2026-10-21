@@ -39,7 +39,7 @@ footer{padding:20px;color:#93a2ad;text-align:center;font-size:.8rem}
   <div class="sub">ศูนย์บัญชาการ · ระบบข้อมูลและเซฟเกม</div>  
 <div class="card" style="margin-top:12px">
   <h2>Cloud Sync — ซิงก์เซฟเกม</h2>
-  <label>อีเมล</label>
+  <div id="cloudAuthForm"><label>อีเมล</label>
   <input id="cloudEmail" type="email" placeholder="อีเมลของคุณ">
   <label>รหัสผ่าน</label>
   <input id="cloudPassword" type="password" placeholder="รหัสผ่าน">
@@ -271,21 +271,32 @@ if (error) throw error;
   }
 };
 
+
 document.getElementById("cloudLogin").onclick = async () => {
   try {
     const email = document.getElementById("cloudEmail").value.trim();
     const password = document.getElementById("cloudPassword").value;
-    if (!email || !password) throw new Error("กรุณากรอกอีเมลและรหัสผ่าน");
 
-    const { error } = await cloud.auth.signInWithPassword({
-      email, password
+    if (!email || !password) {
+      throw new Error("กรุณากรอกอีเมลและรหัสผ่าน");
+    }
+
+    const { data, error } = await cloud.auth.signInWithPassword({
+      email,
+      password
     });
+
     if (error) throw error;
-    cloudStatus.textContent = "เข้าสู่ระบบแล้ว";
+
+    if (data.session) {
+      document.getElementById("cloudAuthForm").style.display = "none";
+      cloudStatus.textContent = "เข้าสู่ระบบแล้ว";
+    }
   } catch (e) {
     cloudStatus.textContent = "เข้าสู่ระบบไม่สำเร็จ: " + e.message;
   }
 };
+
 
 document.getElementById("cloudLogout").onclick = async () => {
   try {
